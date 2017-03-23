@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <time.h>
 #include <wiringPiSPI.h>
+#include <wiringPiI2C.h>
+#include <wiringPi.h>
 #include <unistd.h>
 
 typedef enum {
@@ -58,6 +60,8 @@ struct CAM {
 
 static struct CAM myCAM;
 
+void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS);
+
 void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS)
 {
 	arducam_spi_write(addr | 0x80, data, SPI_CS);
@@ -78,6 +82,8 @@ void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS)
 		digitalWrite(SPI_CS, HIGH);
 	}
 }
+
+uint8_t arducam_spi_read(uint8_t address, int SPI_CS);
 
 uint8_t arducam_read_reg(uint8_t addr, int SPI_CS)
 {
@@ -103,7 +109,7 @@ uint8_t arducam_spi_read(uint8_t address, int SPI_CS)
 	return spiData[1];
 }
 
-void main()
+int main()
 {
 	wiringPiSetup();
 	if (wiringPiSPISetup(SPI_ARDUCAM, SPI_ARDUCAM_SPEED) != -1)
@@ -113,9 +119,10 @@ void main()
 		pinMode(CAM1_CS, OUTPUT);
 		digitalWrite(CAM1_CS, HIGH);
 
-		if (wiringPiI2CSetup(myCam.sensor_addr) != -1)
+		if (wiringPiI2CSetup(myCAM.sensor_addr) != -1)
 		{
 			arducam_write_reg(ARDUCHIP_TEST1, 0x55, CAM1_CS);
+			uint8_t temp;
 			temp = arducam_read_reg(ARDUCHIP_TEST1, CAM1_CS);
 			//printf("temp=%x\n",temp);
 			if (temp != 0x55) {
@@ -135,5 +142,5 @@ void main()
 	{
 		printf("ERROR: SPI init failed\n");
 	}
-	return;
+	return 0;
 }
