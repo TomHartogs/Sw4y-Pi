@@ -88,7 +88,7 @@ uint8_t arducam_spi_read(uint8_t address, int SPI_CS);
 uint8_t arducam_read_reg(uint8_t addr, int SPI_CS)
 {
 	uint8_t data;
-	data = arducam_spi_read(addr & 0x7F, SPI_CS);
+	data = arducam_spi_read(addr | 0x80, SPI_CS);
 
 	return data;
 }
@@ -124,7 +124,7 @@ int main()
 			arducam_write_reg(ARDUCHIP_TEST1, 0x55, CAM1_CS);
 			uint8_t temp;
 			temp = arducam_read_reg(ARDUCHIP_TEST1, CAM1_CS);
-			//printf("temp=%x\n",temp);
+			printf("temp=%x\n",temp);
 			if (temp != 0x55) {
 				printf("SPI interface error!\n");
 				exit(EXIT_FAILURE);
