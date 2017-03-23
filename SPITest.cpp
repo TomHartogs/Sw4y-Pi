@@ -18,23 +18,6 @@ typedef enum {
 	smOV2640,
 } sensor_model_t;
 
-typedef enum {
-	sz160x120,
-	sz176x144,
-	sz320x240,
-	sz352x288,
-	sz640x480,
-	sz800x600,
-	sz1024x768,
-	sz1280x960,
-	sz1600x1200,
-} jpeg_size_t;
-
-struct CAM {
-	image_format_t m_fmt;
-	sensor_model_t sensor_model;
-	uint8_t sensor_addr;
-};
 
 //****************************************************/
 //* Camera Choose Pin Definition
@@ -58,56 +41,13 @@ struct CAM {
 #define ARDUCHIP_TEST1       	0x00  //TEST register
 #define ARDUCHIP_TEST2      	0x01  //TEST register
 
+struct CAM {
+	image_format_t m_fmt;
+	sensor_model_t sensor_model;
+	uint8_t sensor_addr;
+};
+
 static struct CAM myCAM;
-
-void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS);
-
-void arducam_write_reg(uint8_t addr, uint8_t data, int SPI_CS)
-{
-	arducam_spi_write(addr | 0x80, data, SPI_CS);
-}
-
-void arducam_spi_write(uint8_t address, uint8_t value, int SPI_CS)
-{
-	uint8_t spiData[2];
-	spiData[0] = address;
-	spiData[1] = value;
-	if (SPI_CS < 0)
-		wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-	else
-	{
-
-		digitalWrite(SPI_CS, LOW);
-		wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-		digitalWrite(SPI_CS, HIGH);
-	}
-}
-
-uint8_t arducam_spi_read(uint8_t address, int SPI_CS);
-
-uint8_t arducam_read_reg(uint8_t addr, int SPI_CS)
-{
-	uint8_t data;
-	data = arducam_spi_read(addr | 0x80, SPI_CS);
-
-	return data;
-}
-
-uint8_t arducam_spi_read(uint8_t address, int SPI_CS)
-{
-	uint8_t spiData[2];
-	spiData[0] = address;
-	spiData[1] = 0x00;
-	if (SPI_CS < 0)
-		wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-	else
-	{
-		digitalWrite(SPI_CS, LOW);
-		wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-		digitalWrite(SPI_CS, HIGH);
-	}
-	return spiData[1];
-}
 
 int main()
 {
@@ -121,9 +61,37 @@ int main()
 
 		if (wiringPiI2CSetup(myCAM.sensor_addr) != -1)
 		{
-			arducam_write_reg(ARDUCHIP_TEST1, 0x55, CAM1_CS);
+			//arducam_write_reg(ARDUCHIP_TEST1, 0x55, CAM1_CS);
+				//arducam_spi_write(ARDUCHIP_TEST1 | 0x80, 0x55, CAM1_CS);
+			uint8_t spiData[2];
+			spiData[0] = ARDUCHIP_TEST1 | 0x80;
+			spiData[1] = 0x55;
+			if (SPI_CS < 0)
+				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+			else
+			{
+
+				digitalWrite(CAM1_CS, LOW);
+				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+				digitalWrite(CAM1_CS, HIGH);
+			}
+
 			uint8_t temp;
-			temp = arducam_read_reg(ARDUCHIP_TEST1, CAM1_CS);
+			//temp = arducam_read_reg(ARDUCHIP_TEST1, CAM1_CS);
+				//data = arducam_spi_read(addr & 0x7F, SPI_CS);
+			uint8_t spiData[2];
+			spiData[0] = ARDUCHIP_TEST1 & 0x7F;
+			spiData[1] = 0x00;
+			if (SPI_CS < 0)
+				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+			else
+			{
+				digitalWrite(CAM1_CS, LOW);
+				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+				digitalWrite(CAM1_CS, HIGH);
+			}
+			temp =  spiData[1];
+
 			printf("temp=%x\n",temp);
 			if (temp != 0x55) {
 				printf("SPI interface error!\n");
