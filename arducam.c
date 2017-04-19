@@ -15,35 +15,9 @@
 
 static struct CAM myCAM; 
 
-int arducam(sensor_model_t model,int SPI_CS1, int SPI_CS2, int SPI_CS3, int SPI_CS4)
+int arducam(int SPI_CS1, int SPI_CS2, int SPI_CS3, int SPI_CS4)
 {
-	myCAM.sensor_model = model;
-	switch(myCAM.sensor_model)
-	{
-		case smOV7660:
-		case smOV7670:
-		case smOV7675:
-		case smOV7725:
-			myCAM.sensor_addr = 0x21;
-			break;
-		case smMT9D111:
-			myCAM.sensor_addr = 0x5d;
-			break;
-		case smOV3640:
-		case smOV5642:
-			myCAM.sensor_addr = 0x3c;
-			break;
-		case smOV2640:
-		case smOV9655:
-			myCAM.sensor_addr = 0x30;
-			break;
-		case smMT9M112:
-			myCAM.sensor_addr = 0x5d;
-			break;
-		default:
-			myCAM.sensor_addr = 0x21;
-			break;
-	}
+	myCAM.sensor_addr = 0x30;
 	if(SPI_CS1>=0)
 		{
 			if (!arducam_spi_init(SPI_CS1)) {
@@ -86,19 +60,12 @@ void arducam_init()
 	arducam_i2c_write(0xff, 0x01);
 	arducam_i2c_write(0x12, 0x80);
 	arducam_delay_ms(100);
-	if(myCAM.m_fmt == fmtJPEG)
-	{
-		arducam_i2c_write_regs(OV2640_JPEG_INIT);
-		arducam_i2c_write_regs(OV2640_YUV422);
-		arducam_i2c_write_regs(OV2640_JPEG);
-		arducam_i2c_write(0xff, 0x01);
-		arducam_i2c_write(0x15, 0x00);
-		arducam_i2c_write_regs(OV2640_320x240_JPEG);
-	}
-	else
-	{
-		arducam_i2c_write_regs(OV2640_QVGA);
-	}
+	arducam_i2c_write_regs(OV2640_JPEG_INIT);
+	arducam_i2c_write_regs(OV2640_YUV422);
+	arducam_i2c_write_regs(OV2640_JPEG);
+	arducam_i2c_write(0xff, 0x01);
+	arducam_i2c_write(0x15, 0x00);
+	arducam_i2c_write_regs(OV2640_320x240_JPEG);
 }
 
 void arducam_flush_fifo(int SPI_CS)
@@ -183,8 +150,14 @@ void clear_bit(uint8_t addr, uint8_t bit, int SPI_CS)
 
 }
 
+
+
+
+
+
 void arducam_set_jpeg_size(jpeg_size_t size)
 {
+#ifdef OV2640_CAM
 	switch(size)
 	{
 		case sz160x120:
@@ -218,6 +191,57 @@ void arducam_set_jpeg_size(jpeg_size_t size)
 			arducam_i2c_write_regs(OV2640_320x240_JPEG);
 			break;
 	}
+#endif
+
+}
+
+void arducam_OV5642_set_jpeg_size(jpeg_size_t size)
+{
+#if defined OV5642_CAM
+
+	arducam_i2c_write_word_regs(ov5642_dvp_fmt_global_init); 
+	delay(100); 
+	switch(size)
+	{
+		case OV5642_320x240:	
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+
+			break;
+		case OV5642_640x480:	
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_vga);
+
+			break;
+//		case OV5642_1280x720:
+//			
+//			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+//			arducam_i2c_write_word_regs(ov5642_res_720P);
+//
+//			break;
+		case OV5642_1920x1080:
+			  arducam_i2c_write_word_regs(OV5642_1080P_Video_setting);
+		    arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+			break;
+		case OV5642_2048x1536:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qxga);
+		  arducam_i2c_word_write(0x3818, 0xA8); 
+			arducam_i2c_word_write(0x3621, 0x10); 
+			arducam_i2c_word_write(0x3801 , 0xC8);
+			
+			break;
+		case OV5642_2592x1944:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_5M);
+      arducam_i2c_word_write(0x4407,0x08); 
+			arducam_i2c_word_write(0x3818, 0xA8); 
+			arducam_i2c_word_write(0x3621, 0x10); 
+			arducam_i2c_word_write(0x3801 , 0xC8);
+			break;
+		default:
+			arducam_i2c_write_word_regs(ov5642_dvp_fmt_jpeg_qvga);
+			break;
+	}
+
+	#endif
+
 }
 
 void arducam_set_format(image_format_t fmt)

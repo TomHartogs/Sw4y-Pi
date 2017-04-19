@@ -66,30 +66,21 @@ int main()
 			uint8_t spiData[2];
 			spiData[0] = ARDUCHIP_TEST1 | 0x80;
 			spiData[1] = 0x55;
-			if (SPI_CS < 0)
-				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-			else
-			{
 
-				digitalWrite(CAM1_CS, LOW);
-				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-				digitalWrite(CAM1_CS, HIGH);
-			}
+			digitalWrite(CAM1_CS, LOW);
+			wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+			digitalWrite(CAM1_CS, HIGH);
 
 			uint8_t temp;
 			//temp = arducam_read_reg(ARDUCHIP_TEST1, CAM1_CS);
 				//data = arducam_spi_read(addr & 0x7F, SPI_CS);
-			uint8_t spiData[2];
 			spiData[0] = ARDUCHIP_TEST1 & 0x7F;
 			spiData[1] = 0x00;
-			if (SPI_CS < 0)
-				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-			else
-			{
-				digitalWrite(CAM1_CS, LOW);
-				wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
-				digitalWrite(CAM1_CS, HIGH);
-			}
+
+			digitalWrite(CAM1_CS, LOW);
+			wiringPiSPIDataRW(SPI_ARDUCAM, spiData, 2);
+			digitalWrite(CAM1_CS, HIGH);
+
 			temp =  spiData[1];
 
 			printf("temp=%x\n",temp);
